@@ -7,7 +7,7 @@ st.set_page_config(page_title="විද්‍යා ප්‍රශ්න ව�
 
 st.title("🔬 ලෝක ප්‍රකට පුද්ගලයින් හඳුනාගමු")
 
-# ඔයා ලබා දුන් පිළිවෙලට අනුව දත්ත (කිසිම වෙනසක් කර නැත)
+# ඔයා ලබා දුන් දත්ත පිළිවෙල (7-Bell, 11-Volta ආදී සියල්ල එලෙසම ඇත)
 questions_list = [
     {"q_no": 1, "file": "1", "answer": "අයිසැක් නිව්ටන්"},
     {"q_no": 2, "file": "4", "answer": "ගැලීලියෝ ගැලිලි"},
@@ -26,10 +26,8 @@ questions_list = [
     {"q_no": 15, "file": "20", "answer": "ඇලෙක්සැන්ඩර් ෆ්ලෙමින්"}
 ]
 
-# වැරදි පිළිතුරු සඳහා භාවිතා කරන නාමාවලිය
 all_names = list(set([q["answer"] for q in questions_list]))
 
-# Session state එක පවත්වා ගැනීම
 if 'score' not in st.session_state:
     st.session_state.score = 0
 if 'current_index' not in st.session_state:
@@ -42,7 +40,6 @@ if st.session_state.current_index < len(questions_list):
     img_filename = current_q["file"]
     correct_answer = current_q["answer"]
     
-    # පිළිතුරු 4ක් සෑදීම
     if not st.session_state.options:
         wrong_choices = random.sample([n for n in all_names if n != correct_answer], 3)
         options = wrong_choices + [correct_answer]
@@ -62,26 +59,26 @@ if st.session_state.current_index < len(questions_list):
     with col2:
         st.write("**මෙම පින්තූරයේ සිටින්නේ කවුද?**")
         
-        # මෙතැනදී on_change භාවිතා කර පිළිතුරක් තේරූ සැනින් ක්‍රියාත්මක වන ලෙස සැකසුවා
-        def check_answer():
-            user_choice = st.session_state[f"q_{st.session_state.current_index}"]
-            if user_choice == correct_answer:
-                st.toast(f"නිවැරදියි! ✅ මේ {correct_answer}", icon='🎉')
-                st.session_state.score += 1
-            else:
-                st.toast(f"වැරදියි! ❌ නිවැරදි පිළිතුර: {correct_answer}", icon='⚠️')
-            
-            # තත්පර 1.5ක් පමණ වෙලාවක් ලබා දී ඊළඟ එකට යන්න
-            time.sleep(1.5)
-            st.session_state.current_index += 1
-            st.session_state.options = []
-
-        st.radio(
+        # පිළිතුර තෝරන තැන
+        user_choice = st.radio(
             "පිළිතුර තෝරන්න:", 
             st.session_state.options, 
-            key=f"q_{st.session_state.current_index}",
-            on_change=check_answer
+            key=f"q_{st.session_state.current_index}"
         )
+        
+        # බටන් එක එබූ සැනින් ක්‍රියාත්මක වන කොටස
+        if st.button("පිළිතුර තහවුරු කරන්න"):
+            if user_choice == correct_answer:
+                st.success(f"නිවැරදියි! ✅")
+                st.session_state.score += 1
+            else:
+                st.error(f"වැරදියි! ❌ නිවැරදි පිළිතුර: {correct_answer}")
+            
+            # තත්පරයකට අඩු කාලයක් පෙන්වා ඊළඟ එකට මාරු වීම
+            time.sleep(0.8)
+            st.session_state.current_index += 1
+            st.session_state.options = []
+            st.rerun()
 
     st.progress(st.session_state.current_index / len(questions_list))
 
