@@ -1,14 +1,13 @@
 import streamlit as st
 import os
 import random
+import time
 
 st.set_page_config(page_title="විද්‍යා ප්‍රශ්න විචාරාත්මක වැඩසටහන", page_icon="🔬")
 
 st.title("🔬 ලෝක ප්‍රකට පුද්ගලයින් හඳුනාගමු")
-st.write("ප්‍රශ්න පිළිවෙලට අනුව නිවැරදි පිළිතුර තෝරන්න.")
 
-# ප්‍රශ්න අංක පිළිවෙලට (1, 2, 3...) අදාළ පින්තූරය සහ නිවැරදි පිළිතුර
-# මෙහිදී 'file' යනු ඔයා GitHub එකට දාපු පින්තූරයේ නමයි
+# ඔයා ලබා දුන් පිළිවෙලට අනුව දත්ත (කිසිම වෙනසක් කර නැත)
 questions_list = [
     {"q_no": 1, "file": "1", "answer": "අයිසැක් නිව්ටන්"},
     {"q_no": 2, "file": "4", "answer": "ගැලීලියෝ ගැලිලි"},
@@ -27,22 +26,16 @@ questions_list = [
     {"q_no": 15, "file": "20", "answer": "ඇලෙක්සැන්ඩර් ෆ්ලෙමින්"}
 ]
 
-# වැරදි පිළිතුරු සෑදීමට භාවිතා කරන නාමාවලිය
+# වැරදි පිළිතුරු සඳහා භාවිතා කරන නාමාවලිය
 all_names = list(set([q["answer"] for q in questions_list]))
 
+# Session state එක පවත්වා ගැනීම
 if 'score' not in st.session_state:
     st.session_state.score = 0
 if 'current_index' not in st.session_state:
     st.session_state.current_index = 0
 if 'options' not in st.session_state:
     st.session_state.options = []
-if 'answered' not in st.session_state:
-    st.session_state.answered = False
-
-def next_question():
-    st.session_state.current_index += 1
-    st.session_state.options = []
-    st.session_state.answered = False
 
 if st.session_state.current_index < len(questions_list):
     current_q = questions_list[st.session_state.current_index]
@@ -56,6 +49,8 @@ if st.session_state.current_index < len(questions_list):
         random.shuffle(options)
         st.session_state.options = options
 
+    st.write(f"### ප්‍රශ්නය {current_q['q_no']} / {len(questions_list)}")
+    
     col1, col2 = st.columns([1, 1])
     
     with col1:
@@ -65,24 +60,28 @@ if st.session_state.current_index < len(questions_list):
             st.error(f"පින්තූරය '{img_filename}' හමු නොවීය.")
 
     with col2:
-        st.write(f"### ප්‍රශ්නය {current_q['q_no']} / {len(questions_list)}")
         st.write("**මෙම පින්තූරයේ සිටින්නේ කවුද?**")
         
-        choice = st.radio("පිළිතුර තෝරන්න:", st.session_state.options, key=f"q_{st.session_state.current_index}")
-        
-        if not st.session_state.answered:
-            if st.button("පිළිතුර තහවුරු කරන්න"):
-                st.session_state.answered = True
-                if choice == correct_answer:
-                    st.success(f"නිවැරදියි! ✅")
-                    st.session_state.score += 1
-                else:
-                    st.error(f"වැරදියි! ❌ නිවැරදි පිළිතුර: {correct_answer}")
-                st.rerun()
-        else:
-            if st.button("ඊළඟ ප්‍රශ්නය ➡️"):
-                next_question()
-                st.rerun()
+        # මෙතැනදී on_change භාවිතා කර පිළිතුරක් තේරූ සැනින් ක්‍රියාත්මක වන ලෙස සැකසුවා
+        def check_answer():
+            user_choice = st.session_state[f"q_{st.session_state.current_index}"]
+            if user_choice == correct_answer:
+                st.toast(f"නිවැරදියි! ✅ මේ {correct_answer}", icon='🎉')
+                st.session_state.score += 1
+            else:
+                st.toast(f"වැරදියි! ❌ නිවැරදි පිළිතුර: {correct_answer}", icon='⚠️')
+            
+            # තත්පර 1.5ක් පමණ වෙලාවක් ලබා දී ඊළඟ එකට යන්න
+            time.sleep(1.5)
+            st.session_state.current_index += 1
+            st.session_state.options = []
+
+        st.radio(
+            "පිළිතුර තෝරන්න:", 
+            st.session_state.options, 
+            key=f"q_{st.session_state.current_index}",
+            on_change=check_answer
+        )
 
     st.progress(st.session_state.current_index / len(questions_list))
 
@@ -94,5 +93,4 @@ else:
         st.session_state.score = 0
         st.session_state.current_index = 0
         st.session_state.options = []
-        st.session_state.answered = False
         st.rerun()
