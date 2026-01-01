@@ -1,63 +1,82 @@
 import streamlit as st
-import random
+import os
 
-# 1. විද්‍යාඥයින්ගේ දත්ත (පින්තූර ලින්ක් සහ පිළිතුරු)
-SCIENTISTS = [
-    {
-        "name": "Albert Einstein",
-        "image": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Albert_Einstein_Head.jpg",
-        "options": ["Isaac Newton", "Albert Einstein", "Nikola Tesla", "Marie Curie"]
-    },
-    {
-        "name": "Marie Curie",
-        "image": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Marie_Curie_2.jpg",
-        "options": ["Charles Darwin", "Marie Curie", "Ada Lovelace", "Rosalind Franklin"]
-    },
-    {
-        "name": "Isaac Newton",
-        "image": "https://upload.wikimedia.org/wikipedia/commons/3/39/GodfreyKneller-IsaacNewton-1689.jpg",
-        "options": ["Galileo Galilei", "Isaac Newton", "Thomas Edison", "Louis Pasteur"]
-    },
-    {
-        "name": "Nikola Tesla",
-        "image": "https://upload.wikimedia.org/wikipedia/commons/7/79/Tesla_circa_1890.jpg",
-        "options": ["Guglielmo Marconi", "Nikola Tesla", "Alexander Graham Bell", "Michael Faraday"]
-    }
-]
+# ඇප් එකේ මූලික සැකසුම්
+st.set_page_config(page_title="ලෝක ප්‍රකට පුද්ගලයින්", page_icon="💡")
 
-st.title("🔬 Science Heroes: Quiz Time!")
-st.subheader("පින්තූරයේ සිටින විද්‍යාඥයා කවුදැයි හඳුනාගන්න.")
+st.title("💡 ලෝක ප්‍රකට පුද්ගලයින් කවුද?")
+st.write("පින්තූරය බලා නිවැරදි නම සිංහලෙන් හෝ ඉංග්‍රීසියෙන් ඇතුළත් කරන්න.")
 
-# Session State මගින් ප්‍රශ්න තෝරාගැනීම
-if 'current_q' not in st.session_state:
-    st.session_state.current_q = random.choice(SCIENTISTS)
-    st.session_state.feedback = ""
+# දැන් පින්තූර තියෙන්නේ ප්‍රධාන තැනම නිසා (No folder)
+# IMAGE_FOLDER එක හිස්ව තබමු
+IMAGE_FOLDER = ""
 
-q = st.session_state.current_q
+# ඔයා GitHub එකට දාපු ෆයිල් වල නම් සහ පිළිතුරු
+data = {
+    "1": ["Albert Einstein", "ඇල්බට් අයින්ස්ටයින්"],
+    "4": ["Thomas Edison", "තෝමස් එඩිසන්"],
+    "7": ["Marie Curie", "මාරි කියුරි"],
+    "8": ["Isaac Newton", "අයිසැක් නිව්ටන්"],
+    "9": ["Nikola Tesla", "නිකොලා ටෙස්ලා"],
+    "10": ["Charles Darwin", "චාල්ස් ඩාවින්"],
+    "11": ["Alexander Graham Bell", "ඇලෙක්සැන්ඩර් ග්‍රැහැම් බෙල්"],
+    "12": ["Galileo Galilei", "ගැලීලියෝ ගැලිලි"],
+    "13": ["Wright Brothers", "රයිට් සහෝදරයෝ"],
+    "14": ["Leonardo da Vinci", "ලියනාඩෝ ඩා වින්චි"],
+    "15": ["Michael Faraday", "මයිකල් ෆැරඩේ"],
+    "17": ["Stephen Hawking", "ස්ටීවන් හෝකින්"],
+    "18": ["Benjamin Franklin", "බෙන්ජමින් ෆ්‍රැන්ක්ලින්"],
+    "19": ["Louis Pasteur", "ලුවී පාස්චර්"],
+    "20": ["Steve Jobs", "ස්ටීව් ජොබ්ස්"]
+}
 
-# පින්තූරය පෙන්වීම (Auto load from URL)
-col1, col2 = st.columns([1, 1])
+if 'score' not in st.session_state:
+    st.session_state.score = 0
+if 'current_index' not in st.session_state:
+    st.session_state.current_index = 0
 
-with col1:
-    st.image(q["image"], width=300, caption="කවුද මේ?")
+image_files = list(data.keys())
 
-with col2:
-    # බහුවරණ පිළිතුරු 4 පෙන්වීම
-    user_choice = st.radio("නිවැරදි පිළිතුර තෝරන්න:", q["options"])
+if st.session_state.current_index < len(image_files):
+    img_filename = image_files[st.session_state.current_index]
+    correct_answers = data[img_filename]
     
-    if st.button("Submit Answer"):
-        if user_choice == q["name"]:
-            st.session_state.feedback = "✅ නිවැරදියි! ඉතා හොඳයි."
+    # පින්තූරය පෙන්වීම
+    img_path = img_filename # ෆෝල්ඩරයක් නැති නිසා කෙලින්ම ෆයිල් නම ගන්නවා
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        if os.path.exists(img_path):
+            st.image(img_path, use_container_width=True)
         else:
-            st.session_state.feedback = f"❌ වැරදියි. මොහු {q['name']} යි."
+            # පින්තූරය පේන්නේ නැත්නම් මෙතනින් ඒක කියනවා
+            st.error(f"පින්තූරය පේන්න නැහැ: '{img_filename}'")
+            st.info("GitHub එකේ මේ නමින්ම ෆයිල් එක තියෙනවා නේද කියලා බලන්න.")
+    
+    with col2:
+        st.write(f"### ප්‍රශ්න අංකය: {st.session_state.current_index + 1} / {len(image_files)}")
+        user_input = st.text_input("මෙයා කවුද?", key=f"input_{st.session_state.current_index}")
+        
+        if st.button("පිළිතුර පරීක්ෂා කරන්න"):
+            if any(ans.lower().strip() == user_input.lower().strip() for ans in correct_answers):
+                st.success(f"නිවැරදියි! මේ {correct_answers[0]}")
+                st.session_state.score += 1
+            else:
+                st.error(f"වැරදියි. නිවැරදි පිළිතුර: {correct_answers[0]}")
+            
+            # මීළඟට යාමට Button එක
+            if st.button("ඊළඟ පින්තූරය ➡️"):
+                st.session_state.current_index += 1
+                st.rerun()
 
-# ප්‍රතිඵලය පෙන්වීම
-if st.session_state.feedback:
-    st.info(st.session_state.feedback)
-    if st.button("Next Question ➡️"):
-        st.session_state.current_q = random.choice(SCIENTISTS)
-        st.session_state.feedback = ""
+    st.progress(st.session_state.current_index / len(image_files))
+
+else:
+    st.balloons()
+    st.header("සෙල්ලම අවසන්! 🎉")
+    st.subheader(f"ඔබේ ලකුණු ප්‍රමාණය: {st.session_state.score} / {len(image_files)}")
+    if st.button("නැවත මුල සිට ආරම්භ කරන්න"):
+        st.session_state.current_index = 0
+        st.session_state.score = 0
         st.rerun()
-
-st.divider()
-st.caption("මෙම පින්තූර අන්තර්ජාලයෙන් ස්වයංක්‍රීයව (Auto-set) ලබාගන්නා ඒවා වේ.")
